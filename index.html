@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏔️ Alpenreis Zomer 2026</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1923; color: #e8eaf0; }
+
+  /* ── GATE ── */
+  #gate {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; background: #0f0f11;
+  }
+  #gate-title { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 0.4rem; text-align: center; }
+  #gate-sub   { font-size: 0.85rem; color: #556; margin-bottom: 2rem; text-align: center; }
+  #gate-box {
+    background: #1a1a1f; border: 1px solid #2a2a32; border-radius: 16px;
+    padding: 2.5rem; width: 360px; text-align: center;
+  }
+  #gate-box h2 { color: #fff; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600; }
+  #pwInput {
+    width: 100%; padding: .85rem; border: 1px solid #333; border-radius: 10px;
+    background: #111; color: #fff; font-size: 1rem; margin-bottom: 1rem; outline: none;
+    transition: border-color .2s;
+  }
+  #pwInput:focus { border-color: #6366f1; }
+  #gate-btn {
+    width: 100%; padding: .85rem; background: #6366f1; color: #fff;
+    border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: background .15s;
+  }
+  #gate-btn:hover { background: #4f52d3; }
+  #gate-back { margin-top: 1rem; font-size: .8rem; color: #444; }
+  #gate-back a { color: #6366f1; text-decoration: none; }
+
+  /* ── APP ── */
+  #app { display: none; flex-direction: column; height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #1a2942 0%, #0f1923 100%);
+    padding: 16px 24px; border-bottom: 1px solid #2a3a54;
+    display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+  }
+  header h1 { font-size: 1.4rem; font-weight: 700; color: #fff; letter-spacing: -.5px; }
+  header p  { font-size: .8rem; color: #8a9bb8; margin-top: 2px; }
+  .badge {
+    background: linear-gradient(135deg, #e8a020, #f0c040);
+    color: #0f1923; font-size: .72rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px; white-space: nowrap; margin-left: auto;
+  }
+
+  .layout { display: flex; flex: 1; min-height: 0; }
+
+  /* ── SIDEBAR ── */
+  #sidebar { width: 355px; min-width: 355px; overflow-y: auto; background: #141f30; border-right: 1px solid #1f2f48; }
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: #2a3a54; border-radius: 2px; }
+
+  .day-card {
+    border-left: 4px solid var(--c); margin: 9px 11px;
+    background: #1a2942; border-radius: 10px; overflow: hidden;
+    cursor: pointer; transition: transform .15s, box-shadow .15s;
+  }
+  .day-card:hover  { transform: translateX(4px); box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+  .day-card.active { box-shadow: 0 0 0 2px var(--c), 0 4px 20px rgba(0,0,0,.4); }
+
+  .dh { background: var(--c); padding: 8px 13px; display: flex; justify-content: space-between; align-items: center; }
+  .dh .dn { font-weight: 800; font-size: .95rem; color: #fff; }
+  .dh .dr { font-size: .76rem; color: rgba(255,255,255,.9); font-weight: 600; margin-top: 1px; }
+  .dh .dd { font-size: .71rem; color: rgba(255,255,255,.8); }
+
+  .db { padding: 10px 13px; }
+  .km-line { font-size: .71rem; color: #8a9bb8; margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+  .km-line::before { content: '⚡'; }
+
+  .act { display: flex; gap: 7px; margin-bottom: 6px; align-items: flex-start; }
+  .act .ic { font-size: .95rem; flex-shrink: 0; margin-top: 1px; }
+  .act .tx { font-size: .79rem; line-height: 1.4; color: #c8d4e8; }
+  .act .tx strong { color: #e8eaf0; font-weight: 600; }
+  .tag { display: inline-block; font-size: .61rem; font-weight: 700; padding: 1px 5px; border-radius: 9px; margin-left: 3px; vertical-align: middle; }
+  .avontuur { background: #2d1b5a; color: #b794f4; }
+  .cultuur  { background: #1a3a2a; color: #68d391; }
+  .zwemmen  { background: #1a3050; color: #63b3ed; }
+  .tip      { background: #3a2a10; color: #f6ad55; }
+
+  .stay { margin-top: 8px; padding: 6px 9px; background: rgba(255,255,255,.04); border-radius: 6px;
+          font-size: .75rem; color: #8a9bb8; display: flex; align-items: center; gap: 5px; }
+  .stay::before { content: '🛏️'; }
+  .divider { height: 1px; background: rgba(255,255,255,.05); margin: 5px 0; }
+
+  /* ── MAP ── */
+  #map-wrap { flex: 1; position: relative; min-height: 0; }
+  #map { position: absolute; inset: 0; }
+
+  /* Leaflet popup */
+  .leaflet-popup-content-wrapper {
+    background: #1a2942 !important; color: #e8eaf0 !important;
+    border: 1px solid #2a3a54 !important; border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5) !important; padding: 0 !important;
+  }
+  .leaflet-popup-tip { background: #1a2942 !important; }
+  .leaflet-popup-content { margin: 0 !important; padding: 0 !important; min-width: 220px; }
+  .pi { padding: 12px 14px; }
+  .pt { font-size: .88rem; font-weight: 700; color: #fff; margin-bottom: 3px; }
+  .pd { font-size: .68rem; color: #8a9bb8; margin-bottom: 6px; }
+  .pa { list-style: none; }
+  .pa li { font-size: .77rem; color: #c8d4e8; padding: 2px 0; }
+  .pa li::before { content: '→ '; color: #8a9bb8; }
+
+  .km-pill {
+    background: rgba(15,25,35,.78); backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,.13); border-radius: 20px;
+    padding: 2px 8px; font-size: 11px; color: rgba(255,255,255,.62);
+    font-weight: 600; white-space: nowrap; pointer-events: none;
+  }
+  .hotel-icon {
+    width: 22px; height: 22px; background: #1a2942;
+    border: 2px solid rgba(255,255,255,.7); border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.5);
+  }
+  .legend {
+    position: absolute; bottom: 20px; right: 12px; z-index: 1000;
+    background: rgba(20,31,48,.92); backdrop-filter: blur(8px);
+    border: 1px solid #2a3a54; border-radius: 10px; padding: 10px 13px;
+    font-size: .71rem; color: #8a9bb8;
+  }
+  .legend h4 { color: #e8eaf0; font-size: .76rem; margin-bottom: 6px; }
+  .li  { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+  .ld  { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+  .lbed{ width: 11px; height: 11px; border-radius: 2px; background: #1a2942; border: 1.5px solid rgba(255,255,255,.6); flex-shrink:0; font-size:8px; display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ GATE ══════════════ -->
+<div id="gate">
+  <div id="gate-title">🏔️ Alpenreis 2026</div>
+  <div id="gate-sub">Ursel · Arlon · Schwarzwald · Bodensee · Zugspitze</div>
+  <div id="gate-box">
+    <h2>Beveiligde reiskaart</h2>
+    <input type="password" id="pwInput" placeholder="Wachtwoord..."
+      onkeydown="if(event.key==='Enter')checkPw()"/>
+    <button id="gate-btn" onclick="checkPw()">Toegang</button>
+    <div id="gate-back"><a href="https://stverstr.github.io">← Portfolio</a></div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <header>
+    <div>
+      <h1>🏔️ Alpenreis Zomer 2026</h1>
+      <p>Ursel · Arlon · Schwarzwald · Bodensee · Zugspitze · terug</p>
+    </div>
+    <span class="badge">25 juli – 1 augustus</span>
+  </header>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+
+      <!-- DAG 1 -->
+      <div class="day-card" style="--c:#e74c3c" onclick="flyTo(0)">
+        <div class="dh"><div><div class="dn">Dag 1</div><div class="dr">Ursel → Arlon</div></div><div class="dd">zat 25 jul</div></div>
+        <div class="db">
+          <div class="km-line">~200 km · ca. 2u · Tesla: 1 laadstop optioneel</div>
+          <div class="act"><span class="ic">🏄</span><span class="tx"><strong>Surf Luxembourg</strong> (Van der Valk Arlon) — indoor surfgolven tot 1,5m, 15×8m basin. Vanaf 6 jaar, beginners welkom. <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="divider"></div>
+          <div class="act"><span class="ic">🏛️</span><span class="tx"><strong>Arlon centrum</strong> — oudste stad van België. Romeinse toren, gezellige terrassen. <span class="tag cultuur">CULTUUR</span></span></div>
+          <div class="act"><span class="ic">💡</span><span class="tx"><span class="tag tip">TIP</span> Boek surfslots vooraf via surflux.eu — populair in weekend!</span></div>
+          <div class="stay">Van der Valk Hotel Luxembourg-Arlon</div>
+        </div>
+      </div>
+
+      <!-- DAG 2 -->
+      <div class="day-card" style="--c:#e67e22" onclick="flyTo(1)">
+        <div class="dh"><div><div class="dn">Dag 2</div><div class="dr">Arlon → Trier → Schwarzwald</div></div><div class="dd">zo 26 jul</div></div>
+        <div class="db">
+          <div class="km-line">~350 km · ca. 4u · Supercharger Freiburg</div>
+          <div class="act"><span class="ic">🏰</span><span class="tx"><strong>Trier</strong> — korte stop Porta Nigra, grootst Romeins poortgebouw north of Alps. Gratis. <span class="tag cultuur">CULTUUR</span></span></div>
+          <div class="act"><span class="ic">💧</span><span class="tx"><strong>Triberg watervallen</strong> — hoogste van Duitsland (163m). Hike door het bos, ca. 1,5u. <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">🏊</span><span class="tx"><strong>Titisee</strong> — zwemmen in prachtig meer midden in Zwarte Woud. Helder water, strand. <span class="tag zwemmen">ZWEMMEN</span></span></div>
+          <div class="stay">Titisee-Neustadt of Hinterzarten</div>
+        </div>
+      </div>
+
+      <!-- DAG 3 -->
+      <div class="day-card" style="--c:#f39c12" onclick="flyTo(2)">
+        <div class="dh"><div><div class="dn">Dag 3</div><div class="dr">Schwarzwald → Bodensee</div></div><div class="dd">ma 27 jul</div></div>
+        <div class="db">
+          <div class="km-line">~130 km · ca. 2u · Supercharger Konstanz</div>
+          <div class="act"><span class="ic">🌊</span><span class="tx"><strong>Rheinfall</strong> (Schaffhausen) — grootste waterval van Europa! 150m breed, 23m hoog. Bootje tot aan de rots. <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">🧗</span><span class="tx"><strong>Abenteuerpark Immenstaad</strong> — klimpark met ziplines aan het meer. Meerdere niveaus, perfect voor tieners. <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">🏊</span><span class="tx"><strong>Zwemmen in Bodensee</strong> — 63km lang meer, warm en helder in juli. <span class="tag zwemmen">ZWEMMEN</span></span></div>
+          <div class="stay">Bregenz (Oostenrijk) of Konstanz</div>
+        </div>
+      </div>
+
+      <!-- DAG 4 -->
+      <div class="day-card" style="--c:#27ae60" onclick="flyTo(3)">
+        <div class="dh"><div><div class="dn">Dag 4</div><div class="dr">Bodensee · Bregenz · Vorarlberg</div></div><div class="dd">di 28 jul</div></div>
+        <div class="db">
+          <div class="km-line">Dag aan het meer · 0 km rijden</div>
+          <div class="act"><span class="ic">🚠</span><span class="tx"><strong>Pfänderbahn</strong> — kabelbaan boven Bregenz naar 1.064m. Panorama over 3 landen, alpenwild park met arenden. <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">🛥️</span><span class="tx"><strong>Bodensee dagboot</strong> — boot naar het middeleeuwse Meersburg of Lindau eilandstad. Zwemmen langs de kant! <span class="tag zwemmen">ZWEMMEN</span></span></div>
+          <div class="act"><span class="ic">🧗</span><span class="tx"><strong>Canyoning Bregenzerwald</strong> — kloven afdalen, springen, glijden in Vorarlberg. <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">💡</span><span class="tx"><span class="tag tip">TIP</span> Keuze: Pfänder (panorama) OF canyoning (wild) — niet allebei op 1 dag.</span></div>
+          <div class="stay">Bregenz (zelfde hotel)</div>
+        </div>
+      </div>
+
+      <!-- DAG 5 -->
+      <div class="day-card" style="--c:#16a085" onclick="flyTo(4)">
+        <div class="dh"><div><div class="dn">Dag 5</div><div class="dr">Bregenz → Füssen → Garmisch</div></div><div class="dd">wo 29 jul</div></div>
+        <div class="db">
+          <div class="km-line">~200 km · ca. 2,5u · Supercharger Garmisch</div>
+          <div class="act"><span class="ic">🏰</span><span class="tx"><strong>Neuschwanstein</strong> (Füssen) — sprookjeskasteel van Ludwig II, Disney's inspiratie. Foto's van Marienbrücke. <span class="tag cultuur">CULTUUR</span></span></div>
+          <div class="act"><span class="ic">🌊</span><span class="tx"><strong>Partnachklamm</strong> — spectaculaire kloof wandeling, tunnels in de rots, watervallen. Nat & geweldig! <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">🏊</span><span class="tx"><strong>Eibsee</strong> — turquoise bergmeer aan de voet van Zugspitze. Zwemmen met uitzicht op de top. <span class="tag zwemmen">ZWEMMEN</span></span></div>
+          <div class="stay">Garmisch-Partenkirchen</div>
+        </div>
+      </div>
+
+      <!-- DAG 6 -->
+      <div class="day-card" style="--c:#2980b9" onclick="flyTo(5)">
+        <div class="dh"><div><div class="dn">Dag 6</div><div class="dr">Garmisch · Zugspitze + Klettersteig</div></div><div class="dd">do 30 jul</div></div>
+        <div class="db">
+          <div class="km-line">Dag in Garmisch · 0 km rijden</div>
+          <div class="act"><span class="ic">🗻</span><span class="tx"><strong>Zugspitze</strong> (2.962m) — hoogste punt van Duitsland! Kabelbaan + gletsjer. 360° panorama over 400 bergtoppen. <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">🧗</span><span class="tx"><strong>Alpspitze Klettersteig</strong> — via ferrata B/C, perfect voor tieners. Start per kabelbaan naar 2.628m. <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">🛶</span><span class="tx"><strong>Isar/Loisach rafting</strong> — wildwater rafting categorie 2–3. Aanbieders in Garmisch. <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">💡</span><span class="tx"><span class="tag tip">TIP</span> Keuze: Zugspitze + Eibsee OF Klettersteig + Rafting. Twee volledige programma's!</span></div>
+          <div class="stay">Garmisch-Partenkirchen (2e nacht)</div>
+        </div>
+      </div>
+
+      <!-- DAG 7 -->
+      <div class="day-card" style="--c:#8e44ad" onclick="flyTo(6)">
+        <div class="dh"><div><div class="dn">Dag 7</div><div class="dr">Garmisch · Vrije dag in de bergen</div></div><div class="dd">vrij 31 jul</div></div>
+        <div class="db">
+          <div class="km-line">Dag in Garmisch · 0 km rijden · 3e nacht</div>
+          <div class="act"><span class="ic">🕳️</span><span class="tx"><strong>Höllentalklamm</strong> — wildste kloof van Beieren, tunnels door de rots, hangende brugjes. Wilder dan Partnachklamm! <span class="tag avontuur">AVONTUUR</span></span></div>
+          <div class="act"><span class="ic">🏊</span><span class="tx"><strong>Eibsee namiddag</strong> — laatste duik in het turquoise bergmeer. Luieren, rust. <span class="tag zwemmen">ZWEMMEN</span></span></div>
+          <div class="act"><span class="ic">🎻</span><span class="tx"><strong>Mittenwald</strong> (20 min) — prachtig beschilderd Beiers bergdorp, vioolmakers, avondwandeling. <span class="tag cultuur">CULTUUR</span></span></div>
+          <div class="act"><span class="ic">💡</span><span class="tx"><span class="tag tip">TIP</span> Morgen lang rijden — vroeg naar bed, stevig ontbijt plannen!</span></div>
+          <div class="stay">Garmisch-Partenkirchen (3e nacht)</div>
+        </div>
+      </div>
+
+      <!-- DAG 8 -->
+      <div class="day-card" style="--c:#c0392b" onclick="flyTo(7)">
+        <div class="dh"><div><div class="dn">Dag 8</div><div class="dr">Garmisch → Ursel · Recht naar huis</div></div><div class="dd">zat 1 aug</div></div>
+        <div class="db">
+          <div class="km-line">~870 km · ca. 8–9u · 2 Supercharger stops</div>
+          <div class="act"><span class="ic">⚡</span><span class="tx"><strong>Supercharger Augsburg of München</strong> — eerste laadstop (~90km), ca. 25 min. Koffie, stretch. <span class="tag tip">TIP</span></span></div>
+          <div class="act"><span class="ic">⚡</span><span class="tx"><strong>Supercharger Neurenberg of Frankfurt</strong> — tweede laadstop (~300km verder), ca. 25 min. Lunch onderweg. <span class="tag tip">TIP</span></span></div>
+          <div class="act"><span class="ic">🏠</span><span class="tx">Thuiskomst Ursel — vertrek om 7u → thuis rond 17–18u. 8 dagen vol avontuur! 🎉</span></div>
+          <div class="act"><span class="ic">🎆</span><span class="tx"><strong>1 augustus = Zwitserse Nationale Feestdag</strong> — onderweg vuurwerk te zien!</span></div>
+          <div class="stay">Thuis in Ursel 🏡</div>
+        </div>
+      </div>
+
+      <div style="padding:12px;font-size:.7rem;color:#4a5a74;text-align:center;border-top:1px solid #1f2f48;margin-top:4px;">
+        ⚡ Superchargers: Arlon · Freiburg · Konstanz · Bregenz · Füssen · Garmisch · Augsburg · Neurenberg · Frankfurt
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div id="map-wrap">
+      <div id="map"></div>
+      <div class="legend">
+        <h4>Legenda</h4>
+        <div class="li"><div class="ld" style="background:#e74c3c"></div> Dag 1 · Arlon</div>
+        <div class="li"><div class="ld" style="background:#e67e22"></div> Dag 2 · Schwarzwald</div>
+        <div class="li"><div class="ld" style="background:#f39c12"></div> Dag 3 · Bodensee</div>
+        <div class="li"><div class="ld" style="background:#27ae60"></div> Dag 4 · Bregenz</div>
+        <div class="li"><div class="ld" style="background:#16a085"></div> Dag 5 · Füssen/Garmisch</div>
+        <div class="li"><div class="ld" style="background:#2980b9"></div> Dag 6 · Zugspitze</div>
+        <div class="li"><div class="ld" style="background:#8e44ad"></div> Dag 7 · Garmisch (3e dag)</div>
+        <div class="li"><div class="ld" style="background:#c0392b"></div> Dag 8 · Terug</div>
+        <div class="li" style="margin-top:6px;padding-top:6px;border-top:1px solid #2a3a54"><div class="lbed">🛏</div> Overnachting</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ AUTH ══
+const MASTER_HASH = '750db0f147fb55c6755f5b3bb2606a35623b43d03c80056c48587dfa2df45c04';
+let mapInitialized = false;
+
+async function sha256(s) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPw() {
+  const h = await sha256(document.getElementById('pwInput').value);
+  if (h === MASTER_HASH) {
+    sessionStorage.setItem('auth','1');
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    onAppReady();
+  } else {
+    const i = document.getElementById('pwInput');
+    i.style.borderColor = '#ef4444';
+    i.value = '';
+    setTimeout(() => i.style.borderColor = '#333', 600);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('auth') === '1') {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    onAppReady();
+  }
+});
+
+// ══ MAP (init na gate) ══
+function onAppReady() {
+  if (mapInitialized) return;
+  mapInitialized = true;
+
+  const map = L.map('map', { center: [48.6, 7.8], zoom: 6 });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO', maxZoom: 19
+  }).addTo(map);
+
+  const allStops = [
+    { pos:[51.073,3.491], name:'Ursel / Aalter', day:'Vertrekpunt', color:'#ffffff',
+      acts:['🎒 Begin van het avontuur!','📍 Vertrek richting Arlon'] },
+    { pos:[49.685,5.817], name:'Arlon · Surf Luxembourg', day:'Dag 1 · zat 25 jul', color:'#e74c3c',
+      acts:['🏄 Indoor surf (golven tot 1,5m)','🏛️ Gallo-Romeinse stadskern','🛏️ Van der Valk Hotel'] },
+    { pos:[49.749,6.637], name:'Trier', day:'Dag 2 · zo 26 jul (doorrit)', color:'#e67e22',
+      acts:['🏰 Porta Nigra (Romeins poortgebouw)','☕ Korte stop, 30 min'] },
+    { pos:[48.132,8.230], name:'Triberg · Schwarzwald', day:'Dag 2 · zo 26 jul', color:'#e67e22',
+      acts:['💧 Hoogste watervallen van Duitsland (163m)','🌲 Hike door Schwarzwald bos'] },
+    { pos:[47.889,8.150], name:'Titisee', day:'Dag 2 · zo 26 jul', color:'#e67e22',
+      acts:['🏊 Zwemmen in Titisee','🛏️ Overnachting Titisee-Neustadt'] },
+    { pos:[47.770,8.615], name:'Rheinfall · Schaffhausen', day:'Dag 3 · ma 27 jul', color:'#f39c12',
+      acts:['🌊 Grootste waterval van Europa!','⛵ Bootje tot aan de rots'] },
+    { pos:[47.697,9.370], name:'Bodensee · Immenstaad', day:'Dag 3 · ma 27 jul', color:'#f39c12',
+      acts:['🧗 Abenteuerpark (klimmen + ziplines)','🏊 Zwemmen in de Bodensee'] },
+    { pos:[47.503,9.747], name:'Bregenz', day:'Dag 3–4 · ma-di 27–28 jul', color:'#27ae60',
+      acts:['🚠 Pfänderbahn (panorama 3 landen)','🛥️ Boot naar Meersburg / Lindau','🧗 Canyoning Bregenzerwald','🛏️ 2 nachten Bregenz'] },
+    { pos:[47.571,10.702], name:'Neuschwanstein · Füssen', day:'Dag 5 · wo 29 jul', color:'#16a085',
+      acts:['🏰 Neuschwanstein kasteel (buiten)','📸 Marienbrücke – beste foto-hoek'] },
+    { pos:[47.495,11.096], name:'Garmisch-Partenkirchen', day:'Dag 5–7 · wo 29 – vrij 31 jul', color:'#2980b9',
+      acts:['🌊 Partnachklamm kloof wandeling','🏊 Eibsee (turquoise bergmeer)','🗻 Zugspitze (2.962m)','🧗 Alpspitze Klettersteig B/C','🛶 Rafting Isar/Loisach','🕳️ Höllentalklamm (dag 7)','🎻 Mittenwald (dag 7 avond)','🛏️ 3 nachten Garmisch'] },
+    { pos:[51.073,3.491], name:'Ursel · Thuis!', day:'Dag 8 · zat 1 aug', color:'#c0392b',
+      acts:['🏡 Thuiskomst ~17-18u!','🎉 8 dagen vol avontuur'] }
+  ];
+
+  const overnights = [
+    { pos:[49.685,5.817], label:'Nacht 1 — Arlon' },
+    { pos:[47.889,8.150], label:'Nacht 2 — Titisee' },
+    { pos:[47.503,9.747], label:'Nacht 3–4 — Bregenz' },
+    { pos:[47.495,11.096], label:'Nacht 5–6–7 — Garmisch' },
+  ];
+
+  const legs = [
+    { wps:[[51.073,3.491],[49.685,5.817]], color:'#e74c3c' },
+    { wps:[[49.685,5.817],[49.749,6.637],[48.132,8.230],[47.889,8.150]], color:'#e67e22' },
+    { wps:[[47.889,8.150],[47.770,8.615],[47.697,9.370],[47.503,9.747]], color:'#f39c12' },
+    { wps:[[47.503,9.747],[47.571,10.702],[47.495,11.096]], color:'#16a085' },
+    { wps:[[47.495,11.096],[48.370,10.897],[49.452,11.077],[51.073,3.491]], color:'#c0392b' },
+  ];
+
+  async function fetchRoute(wps) {
+    const coords = wps.map(([lat,lng]) => `${lng},${lat}`).join(';');
+    const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`);
+    const d = await r.json();
+    if (!d.routes?.[0]) throw new Error('No route');
+    return {
+      geom: d.routes[0].geometry.coordinates.map(([lng,lat]) => [lat,lng]),
+      dist: Math.round(d.routes[0].distance / 1000)
+    };
+  }
+
+  function makeKmIcon(km) {
+    return L.divIcon({ className:'', html:`<div class="km-pill">${km} km</div>`, iconSize:null, iconAnchor:[25,10] });
+  }
+  function makeHotelIcon() {
+    return L.divIcon({ className:'', html:`<div class="hotel-icon">🛏</div>`, iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-14] });
+  }
+  function makeStopIcon(color, size=14) {
+    return L.divIcon({
+      className:'',
+      html:`<div style="width:${size}px;height:${size}px;background:${color};border:2px solid rgba(255,255,255,.8);border-radius:50%;box-shadow:0 0 8px ${color}80,0 2px 6px rgba(0,0,0,.5)"></div>`,
+      iconSize:[size,size], iconAnchor:[size/2,size/2], popupAnchor:[0,-size/2-2]
+    });
+  }
+
+  async function drawAll() {
+    const allCoords = [];
+    const results = await Promise.allSettled(legs.map(l => fetchRoute(l.wps)));
+    results.forEach((res, i) => {
+      const leg = legs[i];
+      const geom = res.status==='fulfilled' ? res.value.geom : leg.wps;
+      const dist = res.status==='fulfilled' ? res.value.dist : null;
+      allCoords.push(...geom);
+      L.polyline(geom, { color:'#000', weight:7, opacity:.2, lineJoin:'round', lineCap:'round' }).addTo(map).bringToBack();
+      L.polyline(geom, { color:leg.color, weight:4, opacity:.85, lineJoin:'round', lineCap:'round' }).addTo(map);
+      if (dist && dist > 20) {
+        L.marker(geom[Math.floor(geom.length/2)], { icon:makeKmIcon(dist), zIndexOffset:-100 }).addTo(map);
+      }
+    });
+    if (allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.08));
+  }
+
+  allStops.forEach(s => {
+    const isHome = s.name.includes('Ursel') && s.day.includes('Vertrek');
+    const m = L.marker(s.pos, { icon:makeStopIcon(s.color, isHome?10:15), zIndexOffset:50 }).addTo(map);
+    m.bindPopup(`<div class="pi"><div class="pt">${s.name}</div><div class="pd">${s.day}</div><ul class="pa">${s.acts.map(a=>`<li>${a}</li>`).join('')}</ul></div>`, { maxWidth:270 });
+  });
+
+  overnights.forEach(o => {
+    L.marker(o.pos, { icon:makeHotelIcon(), zIndexOffset:200 }).addTo(map)
+      .bindTooltip(o.label, { permanent:false, direction:'top', offset:[0,-14] });
+  });
+
+  const flyTargets = [
+    { c:[49.685,5.817], z:10 },
+    { c:[48.2,7.5],     z:8  },
+    { c:[47.6,9.0],     z:9  },
+    { c:[47.503,9.747], z:11 },
+    { c:[47.533,10.9],  z:10 },
+    { c:[47.495,11.096],z:11 },
+    { c:[47.495,11.096],z:10 },
+    { c:[49.5,7.5],     z:6  },
+  ];
+
+  window.flyTo = function(i) {
+    const t = flyTargets[i];
+    map.flyTo(t.c, t.z, { duration:1.2, easeLinearity:.4 });
+    document.querySelectorAll('.day-card').forEach((c,j) => c.classList.toggle('active', j===i));
+  };
+
+  drawAll();
+}
+</script>
+</body>
+</html>
