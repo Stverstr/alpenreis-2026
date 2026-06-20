@@ -293,6 +293,7 @@
 <script>
 // ══ AUTH ══
 const MASTER_HASH = '750db0f147fb55c6755f5b3bb2606a35623b43d03c80056c48587dfa2df45c04';
+const PROJECT_HASH = '5748d6a35e903e8d40fdd6122d372f9bfcfe2cca0d0dd35e75cb5f08326c1bc8';
 let mapInitialized = false;
 
 async function sha256(s) {
@@ -302,7 +303,7 @@ async function sha256(s) {
 
 async function checkPw() {
   const h = await sha256(document.getElementById('pwInput').value);
-  if (h === MASTER_HASH) {
+  if (h === MASTER_HASH || h === PROJECT_HASH) {
     sessionStorage.setItem('auth','1');
     document.getElementById('gate').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
